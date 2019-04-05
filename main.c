@@ -86,10 +86,10 @@ unsigned int hex2dec(char *hex)
 	
 int main()
 {
-	int i,ii,j,rulesDex1,rulesDex2,rulesCount,pktCount;
-	int Tj,Ti,TCount,offset;
+	unsigned int i,ii,j,rulesDex1,rulesDex2,rulesCount,pktCount;
+	unsigned int Tj,Ti,TCount,offset;
 	char Count[6],rules_in[65],pkt[45];
-	char rules_firstDivide[7][25],rules_secondDivide[6][10];
+	char rules_firstDivide[7][25],rules_secondDivide[6][20];
 	char *temp1,*temp2;	
 	const char s[2] = " ",s2[5]="./:";
 									
@@ -264,9 +264,10 @@ int main()
 					}
 			}
 		
-		struct Tout Tout1[TCount]; //获取总输出条目数 
+		
 		printf("32 32 16 16 8 %d\n",TCount);
-		int TCount1=0;
+		struct Tout Tout1[TCount]; //获取总输出条目数 
+		unsigned int TCount1=0;
 		for(Tj=0;Tj<rulesCount;Tj++)
 			{		
 					
@@ -280,8 +281,8 @@ int main()
 							Tout1[TCount1].Trule_mask=rule_mask[Tj];
 							Tout1[TCount1].Trule_data.port_dst[0]=j;
 							Tout1[TCount1].Trule_data.port_src[0]=Ti;
-							printf("data:%s ",Tout1[TCount1].Trule_data.ip_dst);
-							printf("%s ",Tout1[TCount1].Trule_data.ip_src);
+							printf("data:0x%x ",hex2dec(Tout1[TCount1].Trule_data.ip_dst));
+							printf("0x%x ",hex2dec(Tout1[TCount1].Trule_data.ip_src));
 							printf("0x%x ",Tout1[TCount1].Trule_data.port_dst[0]);
 							printf("0x%x ",Tout1[TCount1].Trule_data.port_src[0]);
 							printf("%s ",Tout1[TCount1].Trule_data.protocol);
