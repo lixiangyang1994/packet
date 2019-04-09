@@ -307,12 +307,12 @@ int main()
 				
 					and_ip1=hex2dec(Tout1[Ti].Trule_data.ip_dst)&Tout1[Ti].Trule_mask.ip_dst;
 					and_ip2=hex2dec(packet[Tj].ip_dst)&Tout1[Ti].Trule_mask.ip_dst;
-					and_result = and_ip1&&and_ip2;
+					and_result = (and_ip1==and_ip2)?1:0;
 					if(and_result)
 						{
 							and_ip1=(hex2dec(Tout1[Ti].Trule_data.ip_src)&Tout1[Ti].Trule_mask.ip_src);
 							and_ip2=(hex2dec(packet[Tj].ip_src)&Tout1[Ti].Trule_mask.ip_src);
-							and_result = and_ip1&&and_ip2;
+							and_result = (and_ip1==and_ip2)?1:0;
 							if(and_result)
 								if(Tout1[Ti].Trule_data.port_dst[0]==packet[Tj].port_dst)
 									if(Tout1[Ti].Trule_data.port_src[0]==packet[Tj].port_src)
@@ -322,13 +322,13 @@ int main()
 										
 												break;
 											}
-							else if(Ti==TCount)
+						
+						}
+				
+					else if(Ti==TCount)
 							{
 								match_result[Tj]=0;
 							}
-						}
-				
-				
 			
 												
 				}
