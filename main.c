@@ -2,20 +2,20 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-  
+#include <math.h>  
  //1U就表示的是无符号的1，宏定义可以传参的
 #define SET_BIT(x,n)    (x | 1U<<(n-1))   //这里就是要把数字x的第n位（bit（n-1）位）置为1
 
 #define CLEAR_BIT(x,n)    (x & ~(1U<<(n-1))) //这里就是要把数字x的第n位（bit（n-1）位）清零
 
-
 #define SET_BITS(x,n,m)    (x | ~(~0U<<(m-n+1))<<(n-1))  //这里就是要把数字x的第n到m位置为1(n是低位，m是高位)
+
 
 struct data{            //定义五元目结构 
 	char ip_dst[20];   //目的IP 
 	char ip_src[20];	//源IP 
-	unsigned int port_dst[2];	//目的端口 
-	unsigned int port_src[2];	//源端口 
+    long int port_dst[2];	//目的端口 
+    long int port_src[2];	//源端口 
 	char protocol[20];	//协议 
 	int result;
 	
@@ -23,26 +23,23 @@ struct data{            //定义五元目结构
 struct mask{            //定义五元目结构 
 	unsigned int ip_dst;   //目的IP 
     unsigned int ip_src;	 //源IP 
-	unsigned int port_dst;	//目的端口 
-	unsigned int port_src;	//源端口 
+    long int port_dst;	//目的端口 
+	long int port_src;	//源端口 
 	unsigned int protocol;	//协议 
 	
 };
 struct packet0{            //定义五元目结构 
 	char ip_dst[20];   //目的IP 
 	char ip_src[20];	 //源IP 
-	unsigned int port_dst;	//目的端口 
-	unsigned int port_src;	//源端口 
+	long int port_dst;	//目的端口 
+	long int port_src;	//源端口 
 	int protocol;	//协议 
 	
 };
 struct Tout{
 	struct data Trule_data;
 	struct mask Trule_mask;
-//	unsigned int Hmax_src[2];
-//	unsigned int Hmax_dst[2];
-	unsigned int portCount;
-	
+
 };
 int c2i(char ch)  
 {  
@@ -256,57 +253,97 @@ int main()
 						}
 		
 	}
-		struct Tout Tout1[rulesCount];  
+		
 		TCount = 0;
+		//int *port_bits;
 		for(j=0;j<rulesCount;j++)
 			{	
-				int jx;
-				jx = 0; 
-
-					for(Tj=rule_data[j].port_dst[0];Tj<=rule_data[j].port_dst[1];Tj++)
+				
+				Tj=rule_data[j].port_dst[0];
+				Ti=rule_data[j].port_src[0];
+				int n = (rule_data[j].port_dst[1] - rule_data[j].port_dst[0]+1);
+				
+					while(n>0) 
 					{
-						for(Ti=rule_data[j].port_src[0];Ti<=rule_data[j].port_src[1];Ti++)
+						long step0 = Tj & (0-Tj);
+						while (step0 > n) step0 /= 2;
+						Tj += step0;
+						n -= step0;
+						int m = (rule_data[j].port_src[1] - rule_data[j].port_src[0]+1);	
+						while(m>0)
 							{
+								long step1 = Ti & (0-Ti);
+								while (step1 > m) step1 /= 2;
+								Ti += step1;
+								m -= step1;
+								
 								TCount++;
-								jx++;
 							
-						//	Tout1[j].port_dst[jx][0]=Tj;
-						//	Tout1[j].port_dst[jx][1]=Ti;
+							
 							}
 					}
-				Tout1[j].portCount = jx;
 			}
 		
 		printf("32 32 16 16 8 %d\n",TCount); //total rules bits	
-		
+		struct Tout Tout1[TCount];  
 		int TCount1=0;
-		unsigned int and_ip1,and_ip2,and_port1,and_port2,and_protocol,and_result,Tp;
-		for(Tj=0;Tj<rulesCount;Tj++)
-			{		
+		int TPortdst,TPortsrc;
+		for(j=0;j<rulesCount;j++)
+			{				
+					Tj=rule_data[j].port_dst[0];
 					
-					for(j=rule_data[Tj].port_dst[0];j<=rule_data[Tj].port_dst[1];j++)
+					int n = (rule_data[j].port_dst[1] - rule_data[j].port_dst[0]+1);
+				
+					while(n>0) 
 					{
-						for(Ti=rule_data[Tj].port_src[0];Ti<=rule_data[Tj].port_src[1];Ti++)
-						{	
-				   			
-							Tout1[Tj].Trule_data=rule_data[Tj];
-							Tout1[Tj].Trule_mask=rule_mask[Tj];
-							Tout1[Tj].Trule_data.port_dst[0]=j;
-							Tout1[Tj].Trule_data.port_src[0]=Ti;
-							printf("data:%s ",Tout1[Tj].Trule_data.ip_dst);
-							printf("%s ",Tout1[Tj].Trule_data.ip_src);
-							printf("0x%x ",Tout1[Tj].Trule_data.port_dst[0]);
-							printf("0x%x ",Tout1[Tj].Trule_data.port_src[0]);
-							printf("%s ",Tout1[Tj].Trule_data.protocol);
-							printf("%d\n",Tout1[Tj].Trule_data.result);
-							printf("mask:0x%x ",Tout1[Tj].Trule_mask.ip_dst);
-							printf("0x%x ",Tout1[Tj].Trule_mask.ip_src);
-							printf("0x%x ",Tout1[Tj].Trule_mask.port_dst);
-							printf("0x%x ",Tout1[Tj].Trule_mask.port_src);
-							printf("0x%x\n",Tout1[Tj].Trule_mask.protocol);
-					 		//TCount1++;
-					 		for(Tp=0;Tp<pktCount;Tp++)
-							{	
+						long step0 = Tj & (0-Tj);
+						while (step0 > n) step0 /= 2;
+						TPortdst = Tj;
+						 Tj += step0;
+						 n -= step0;
+						 int Tpmask0 = log(step0)/log(2)+1; 
+						while(--Tpmask0)
+							rule_mask[j].port_dst = CLEAR_BIT(rule_mask[j].ip_src,Tpmask0);
+						int m = (rule_data[j].port_src[1] - rule_data[j].port_src[0]+1);
+						Ti=rule_data[j].port_src[0];
+						while(m>0)
+						{
+								long step1 = Ti & (0-Ti);
+								while (step1 > m) step1 /= 2;
+								TPortsrc = Ti;
+								Ti += step1;
+								m -= step1;
+								int Tpmask1 = log(step0)/log(2)+1;
+								while(--Tpmask1)
+									rule_mask[j].port_src = CLEAR_BIT(rule_mask[j].ip_src,Tpmask1);
+							Tout1[TCount1].Trule_data = rule_data[j];
+							Tout1[TCount1].Trule_mask = rule_mask[j];
+							Tout1[TCount1].Trule_data.port_dst[0] = TPortdst;
+							Tout1[TCount1].Trule_data.port_src[0] = TPortsrc;
+							printf("data:%s ",Tout1[TCount1].Trule_data.ip_dst);
+							printf("%s ",Tout1[TCount1].Trule_data.ip_src);
+							printf("0x%x ",Tout1[TCount1].Trule_data.port_dst[0]);
+							printf("0x%x ",Tout1[TCount1].Trule_data.port_src[0]);
+							printf("%s ",Tout1[TCount1].Trule_data.protocol);
+							printf("%d\n",Tout1[TCount1].Trule_data.result);
+							printf("mask:0x%x ",Tout1[TCount1].Trule_mask.ip_dst);
+							printf("0x%x ",Tout1[TCount1].Trule_mask.ip_src);
+							printf("0x%x ",Tout1[TCount1].Trule_mask.port_dst);
+							printf("0x%x ",Tout1[TCount1].Trule_mask.port_src);
+							printf("0x%x\n",Tout1[TCount1].Trule_mask.protocol);
+					 		TCount1++;
+					 	
+						}
+					}
+						
+			}
+		
+		    unsigned int and_ip1,and_ip2,and_port1,and_port2,and_protocol,and_result,Tp;   
+			for(Tp=0;Tp<pktCount;Tp++)
+			{	
+				for(Tj=0;Tj<TCount;Tj++)
+				{
+				
 								and_ip1=hex2dec(Tout1[Tj].Trule_data.ip_dst)&Tout1[Tj].Trule_mask.ip_dst;
 								and_ip2=hex2dec(packet[Tp].ip_dst)&Tout1[Tj].Trule_mask.ip_dst;
 								and_result = (and_ip1==and_ip2)?1:0;
@@ -316,35 +353,37 @@ int main()
 										and_ip2=(hex2dec(packet[Tp].ip_src)&Tout1[Tj].Trule_mask.ip_src);
 										and_result = (and_ip1==and_ip2)?1:0;
 										if(and_result)
-											if(Tout1[Tj].Trule_data.port_dst[0]==packet[Tp].port_dst)
-												if(Tout1[Tj].Trule_data.port_src[0]==packet[Tp].port_src)
-													if(hex2dec(Tout1[Tj].Trule_data.protocol)==packet[Tp].protocol)
+										{
+											and_port1=(Tout1[Tj].Trule_data.port_dst[0]&Tout1[Tj].Trule_mask.port_dst);
+											and_port2=(packet[Tp].port_dst&Tout1[Tj].Trule_mask.port_dst);
+											and_result = (and_port1==and_port2)?1:0;
+												if(and_result)
+												{
+													and_port1=(Tout1[Tj].Trule_data.port_src[0]&Tout1[Tj].Trule_mask.port_src);
+													and_port2=(packet[Tp].port_src&Tout1[Tj].Trule_mask.port_src);
+													and_result = (and_port1==and_port2)?1:0;
+													if(and_result)
+													 if(hex2dec(Tout1[Tj].Trule_data.protocol)==packet[Tp].protocol)
 														{
-															if(match_result[Tp])
-															match_result[Tp] = match_result[Tp];
-															else
+														
 															match_result[Tp]=Tout1[Tj].Trule_data.result;
-													
+															break;
 														
 														}
+										 		}
+									    }
 									
 									}
-							
-							
-						
+								else if(Tj==TCount)
+									match_result[Tp] = 0;
+																			
 															
-							}
-						}
-					}
-			}
-		
-	
-		for(Tj=0;Tj<pktCount;Tj++)
-			{	
+				}
 			
-			printf("%d\n",match_result[Tj]);		
+			printf("%d\n",match_result[Tp]);		
 				
 			}
-//		system("pause"); 
+		
+
 	return 0;
 }
