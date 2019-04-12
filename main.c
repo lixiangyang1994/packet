@@ -12,11 +12,11 @@
 
 
 struct data{            //定义五元目结构 
-	char ip_dst[20];   //目的IP 
-	char ip_src[20];	//源IP 
+	unsigned int ip_dst;   //目的IP 
+	unsigned int ip_src;	//源IP 
     long int port_dst[2];	//目的端口 
     long int port_src[2];	//源端口 
-	char protocol[20];	//协议 
+	unsigned int protocol;	//协议 
 	int result;
 	
 };
@@ -29,8 +29,8 @@ struct mask{            //定义五元目结构
 	
 };
 struct packet0{            //定义五元目结构 
-	char ip_dst[20];   //目的IP 
-	char ip_src[20];	 //源IP 
+	unsigned int ip_dst;   //目的IP 
+	unsigned int ip_src; 	 //源IP 
 	long int port_dst;	//目的端口 
 	long int port_src;	//源端口 
 	int protocol;	//协议 
@@ -103,8 +103,7 @@ int main()
 
 	for (j = 0;j<rulesCount;j++)
 	{	
-		strcpy(rule_data[j].ip_dst,"0x");
-		strcpy(rule_data[j].ip_src,"0x");
+	
 		scanf("%s %s %s %s %s %d",&rules_firstDivide[0],&rules_firstDivide[1],&rules_firstDivide[2],&rules_firstDivide[3],&rules_firstDivide[4],&rule_data[j].result);	
 		getchar(); 
 		i=5;	
@@ -122,13 +121,13 @@ int main()
 										{	
 											strcpy(rules_secondDivide[ii],temp2);
 											rulesDex1 = atoi(rules_secondDivide[ii]);
-											sprintf(rules_secondDivide[ii],"%02x",rulesDex1);
+										//	sprintf(rules_secondDivide[ii],"%02x",rulesDex1);
 											
 		
 											if(4-ii)
 												{
 													
-													strcat(rule_data[j].ip_dst,rules_secondDivide[ii]);
+													rule_data[j].ip_dst=(rule_data[j].ip_dst*256+atoi(rules_secondDivide[ii]));
 												}
 											if(ii==4)
 												{
@@ -147,11 +146,11 @@ int main()
 										{	
 											strcpy(rules_secondDivide[ii],temp2);
 											rulesDex1 = atoi(rules_secondDivide[ii]);
-											sprintf(rules_secondDivide[ii],"%02x",rulesDex1);
+										//	sprintf(rules_secondDivide[ii],"%02x",rulesDex1);
 											
 											if(4-ii)
 												{
-													strcat(rule_data[j].ip_src,rules_secondDivide[ii]);
+													rule_data[j].ip_src=(rule_data[j].ip_src*256+atoi(rules_secondDivide[ii]));
 												}
 											if(ii==4)
 												{
@@ -189,8 +188,8 @@ int main()
 									case 4:
 										{	
 											strcpy(rules_secondDivide[ii],temp2);
-											strcpy(rule_data[j].protocol,rules_secondDivide[0]);
-											rule_mask[j].protocol = 0xff;
+											rule_data[j].protocol= hex2dec(rules_secondDivide[0]);
+											rule_mask[j].protocol= hex2dec(rules_secondDivide[1]);
 											break;
 										}
 								
@@ -208,8 +207,8 @@ int main()
 	int match_result[pktCount]; 
 	for (j = 0;j<pktCount;j++)
 	{	match_result[j]=0;	
-		strcpy(packet[j].ip_dst,"0x");
-		strcpy(packet[j].ip_src,"0x");
+	//	strcpy(packet[j].ip_dst,"0x");
+	//	strcpy(packet[j].ip_src,"0x");
 		scanf("%s %s %d %d %d",&rules_firstDivide[0],&rules_firstDivide[1],&packet[j].port_dst,&packet[j].port_src,&packet[j].protocol);
 		getchar(); 
 						temp1 = strtok(rules_firstDivide[0],s2);
@@ -221,11 +220,11 @@ int main()
 									strcpy(rules_secondDivide[0],temp1);
 									
 									rulesDex1 = atoi(rules_secondDivide[0]);
-									sprintf(rules_secondDivide[0],"%02x",rulesDex1);
+								//	sprintf(rules_secondDivide[0],"%02x",rulesDex1);
 									
 									if(4-ii)
 										{
-											strcat(packet[j].ip_dst,rules_secondDivide[0]);
+											packet[j].ip_dst=(packet[j].ip_dst*256+atoi(rules_secondDivide[0]));
 											
 										}
 									temp1 = strtok(NULL,s2);
@@ -240,11 +239,11 @@ int main()
 									strcpy(rules_secondDivide[1],temp2);
 									
 									rulesDex2 = atoi(rules_secondDivide[1]);
-									sprintf(rules_secondDivide[1],"%02x",rulesDex2);
+								//	sprintf(rules_secondDivide[1],"%02x",rulesDex2);
 									
 									if(4-ii)
 										{
-											strncat(packet[j].ip_src,rules_secondDivide[1],2);
+											packet[j].ip_src=(packet[j].ip_src*256+atoi(rules_secondDivide[1]));
 										}
 									temp2 = strtok(NULL,s2);
 							
@@ -285,9 +284,10 @@ int main()
 			}
 		
 		printf("32 32 16 16 8 %d\n",TCount); //total rules bits	
-		struct Tout Tout1[TCount];  
+		struct Tout Tout1[rulesCount];  
 		int TCount1=0;
 		int TPortdst,TPortsrc;
+		int and_ip1,and_ip2,and_port1,and_port2,and_protocol,and_result,Tp;   
 		for(j=0;j<rulesCount;j++)
 			{				
 					Tj=rule_data[j].port_dst[0];
@@ -303,7 +303,7 @@ int main()
 						 n -= step0;
 						 int Tpmask0 = log(step0)/log(2)+1; 
 						while(--Tpmask0)
-							rule_mask[j].port_dst = CLEAR_BIT(rule_mask[j].ip_src,Tpmask0);
+							rule_mask[j].port_dst = CLEAR_BIT(rule_mask[j].port_dst,Tpmask0);
 						int m = (rule_data[j].port_src[1] - rule_data[j].port_src[0]+1);
 						Ti=rule_data[j].port_src[0];
 						while(m>0)
@@ -315,72 +315,72 @@ int main()
 								m -= step1;
 								int Tpmask1 = log(step0)/log(2)+1;
 								while(--Tpmask1)
-									rule_mask[j].port_src = CLEAR_BIT(rule_mask[j].ip_src,Tpmask1);
-							Tout1[TCount1].Trule_data = rule_data[j];
-							Tout1[TCount1].Trule_mask = rule_mask[j];
-							Tout1[TCount1].Trule_data.port_dst[0] = TPortdst;
-							Tout1[TCount1].Trule_data.port_src[0] = TPortsrc;
-							printf("data:%s ",Tout1[TCount1].Trule_data.ip_dst);
-							printf("%s ",Tout1[TCount1].Trule_data.ip_src);
-							printf("0x%x ",Tout1[TCount1].Trule_data.port_dst[0]);
-							printf("0x%x ",Tout1[TCount1].Trule_data.port_src[0]);
-							printf("%s ",Tout1[TCount1].Trule_data.protocol);
-							printf("%d\n",Tout1[TCount1].Trule_data.result);
-							printf("mask:0x%x ",Tout1[TCount1].Trule_mask.ip_dst);
-							printf("0x%x ",Tout1[TCount1].Trule_mask.ip_src);
-							printf("0x%x ",Tout1[TCount1].Trule_mask.port_dst);
-							printf("0x%x ",Tout1[TCount1].Trule_mask.port_src);
-							printf("0x%x\n",Tout1[TCount1].Trule_mask.protocol);
-					 		TCount1++;
+									rule_mask[j].port_src = CLEAR_BIT(rule_mask[j].port_src,Tpmask1);
+							Tout1[j].Trule_data = rule_data[j];
+							Tout1[j].Trule_mask = rule_mask[j];
+							Tout1[j].Trule_data.port_dst[0] = TPortdst;
+							Tout1[j].Trule_data.port_src[0] = TPortsrc;
+							printf("data:0x%x ",Tout1[j].Trule_data.ip_dst);
+							printf("0x%x ",Tout1[j].Trule_data.ip_src);
+							printf("0x%x ",Tout1[j].Trule_data.port_dst[0]);
+							printf("0x%x ",Tout1[j].Trule_data.port_src[0]);
+							printf("0x%x ",Tout1[j].Trule_data.protocol);
+							printf("%d\n",Tout1[j].Trule_data.result);
+							printf("mask:0x%x ",Tout1[j].Trule_mask.ip_dst);
+							printf("0x%x ",Tout1[j].Trule_mask.ip_src);
+							printf("0x%x ",Tout1[j].Trule_mask.port_dst);
+							printf("0x%x ",Tout1[j].Trule_mask.port_src);
+							printf("0x%x\n",Tout1[j].Trule_mask.protocol);
+					 	//	TCount1++;
 					 	
-						}
-					}
-						
-			}
-		
-		    unsigned int and_ip1,and_ip2,and_port1,and_port2,and_protocol,and_result,Tp;   
-			for(Tp=0;Tp<pktCount;Tp++)
-			{	
-				for(Tj=0;Tj<TCount;Tj++)
-				{
-				
-								and_ip1=hex2dec(Tout1[Tj].Trule_data.ip_dst)&Tout1[Tj].Trule_mask.ip_dst;
-								and_ip2=hex2dec(packet[Tp].ip_dst)&Tout1[Tj].Trule_mask.ip_dst;
+					 	for(Tp=0;Tp<pktCount;Tp++)
+					 	{
+						 
+						 	and_ip1=(Tout1[j].Trule_data.ip_dst&Tout1[j].Trule_mask.ip_dst);
+								and_ip2=(packet[Tp].ip_dst&Tout1[j].Trule_mask.ip_dst);
 								and_result = (and_ip1==and_ip2)?1:0;
 								if(and_result)
 									{
-										and_ip1=(hex2dec(Tout1[Tj].Trule_data.ip_src)&Tout1[Tj].Trule_mask.ip_src);
-										and_ip2=(hex2dec(packet[Tp].ip_src)&Tout1[Tj].Trule_mask.ip_src);
+										and_ip1=(Tout1[j].Trule_data.ip_src&Tout1[j].Trule_mask.ip_src);
+										and_ip2=(packet[Tp].ip_src&Tout1[j].Trule_mask.ip_src);
 										and_result = (and_ip1==and_ip2)?1:0;
 										if(and_result)
 										{
-											and_port1=(Tout1[Tj].Trule_data.port_dst[0]&Tout1[Tj].Trule_mask.port_dst);
-											and_port2=(packet[Tp].port_dst&Tout1[Tj].Trule_mask.port_dst);
+											and_port1=(Tout1[j].Trule_data.port_dst[0]&Tout1[j].Trule_mask.port_dst);
+											and_port2=(packet[Tp].port_dst&Tout1[j].Trule_mask.port_dst);
 											and_result = (and_port1==and_port2)?1:0;
 												if(and_result)
 												{
-													and_port1=(Tout1[Tj].Trule_data.port_src[0]&Tout1[Tj].Trule_mask.port_src);
-													and_port2=(packet[Tp].port_src&Tout1[Tj].Trule_mask.port_src);
+													and_port1=(Tout1[j].Trule_data.port_src[0]&Tout1[j].Trule_mask.port_src);
+													and_port2=(packet[Tp].port_src&Tout1[j].Trule_mask.port_src);
 													and_result = (and_port1==and_port2)?1:0;
 													if(and_result)
-													 if(hex2dec(Tout1[Tj].Trule_data.protocol)==packet[Tp].protocol)
+													 if(Tout1[j].Trule_data.protocol==packet[Tp].protocol)
 														{
 														
-															match_result[Tp]=Tout1[Tj].Trule_data.result;
-															break;
+															if(match_result[Tp])
+																match_result[Tp] = match_result[Tp];
+															else
+															match_result[Tp]=Tout1[j].Trule_data.result;
 														
 														}
 										 		}
 									    }
 									
 									}
-								else if(Tj==TCount)
-									match_result[Tp] = 0;
-																			
-															
-				}
-			
-			printf("%d\n",match_result[Tp]);		
+							
+							}
+																	
+					 	
+						}
+					}
+						
+			}
+		
+		   
+			for(Tp=0;Tp<pktCount;Tp++)
+			{				
+				printf("%d\n",match_result[Tp]);		
 				
 			}
 		
